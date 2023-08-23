@@ -382,19 +382,19 @@ const createFileMessage = (sid, filename, filesize, sentTime, senderName, filety
     let buttonDiv = document.createElement("div");
     let previewButton = document.createElement("div");
     let downloadButton = document.createElement("a");
-	const name = `${sid || "user"}-${filename}`;
-	filesStack[sid] = name;
-	hiddenInput.id = `${name}+input`;
-	hiddenInput.value = filetype;
 	if (sid) {
+        const name = `${sid}-${filename}`;
+        filesStack[sid] = name;
+        hiddenInput.id = `${name}+input`;
+        hiddenInput.value = filetype;
 		message.classList.add("receiver");
+        previewButton.id = name;
+        downloadButton.id = `${name}+download`;
 	} else {
 		message.classList.add("sender");
 	}
 
-    previewButton.id = name;
     previewButton.innerText = "Preview";
-    downloadButton.id = `${name}+download`;
     downloadButton.innerText = "Download";
     downloadButton.download = filename;
     if (!sid) {
@@ -429,7 +429,6 @@ const createFileMessage = (sid, filename, filesize, sentTime, senderName, filety
 	content.append(filenameDiv, filesizeDiv);
 	message.append(info, content, hiddenInput, buttonDiv);
 	chatRoom.scrollTop = chatRoom.scrollHeight;
-    console.log(message);
 	chatRoom.append(message);
 }
 
