@@ -889,7 +889,7 @@ fileInput.addEventListener("change", (e) => {
             console.log(dataChannels, keys);
             for (let i = 0; i < keys.length; i++) {
                 const fileReader = new FileReader();
-                fileReader.onload = () => {
+                fileReader.onloadend = () => {
                     dataChannels[keys[i]].send(JSON.stringify({
                         senderName: username,
                         filename: file.name,
