@@ -455,7 +455,7 @@ const createChannel = (peer, sid) => {
 				filePreview.src = blobUrl;
 				previewBackground.classList.remove("isHidden");
 			});
-			filesStack[sid] = null;
+            delete filesStack[sid];
 		} else {
 			const { senderName, filename, time, filesize, filetype } = JSON.parse(event.data);
 			console.log(filetype);
@@ -886,6 +886,7 @@ fileInput.addEventListener("change", (e) => {
 		for (let j = 0; j < files.length; j++) {
 			const file = files[j];
 			const sentTime = Date.now();
+            console.log(dataChannels, keys);
             for (let i = 0; i < keys.length; i++) {
                 const fileReader = new FileReader();
                 fileReader.onload = () => {
