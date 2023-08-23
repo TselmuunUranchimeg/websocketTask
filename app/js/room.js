@@ -541,6 +541,7 @@ const createConnection = (connections, sid, isHandleVideoOffer) => {
         connections[sid].onremovetrack = function (event) {
             if (document.getElementById(sid)) {
                 document.getElementById(sid).remove();
+                delete dataChannels[sid];
                 console.log("removed a track");
             }
         };
@@ -718,6 +719,7 @@ socket.on("join room", async (conc, cnames, micinfo, videoinfo) => {
 socket.on("remove peer", (sid) => {
     if (document.getElementById(sid)) {
         document.getElementById(sid).remove();
+        delete dataChannels[sid];
     }
     adjustGrid();
     delete connections[sid];
