@@ -413,10 +413,19 @@ navbar .logo {
 	box-sizing: border-box;
 	padding: 1rem 0.5rem;
 }
-.file-options div {
+.file-options div, .file-options a {
 	background-color: white;
 	padding: 5px;
 	width: 45%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    font-size: 1rem;
+    color: black;
+}
+.file-options div:hover, .file-options a:hover {
+    background-color: #4ECCA3;
+    color: white;
 }
 
 .sel-lingua {

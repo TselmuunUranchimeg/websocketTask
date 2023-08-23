@@ -370,7 +370,7 @@ const createPreview = (filetype) => {
 	return preview;
 };
 
-const createFileMessage = (sid, filename, filesize, sentTime, senderName, filetype) => {
+const createFileMessage = (sid, filename, filesize, sentTime, senderName, filetype, ownUrl) => {
 	let message = document.createElement("div");
 	let info = document.createElement("div");
 	let userNameDiv = document.createElement("div");
@@ -379,9 +379,11 @@ const createFileMessage = (sid, filename, filesize, sentTime, senderName, filety
 	let filenameDiv = document.createElement("div");
 	let filesizeDiv = document.createElement("div");
 	let hiddenInput = document.createElement("input");
+    let buttonDiv = document.createElement("div");
+    let previewButton = document.createElement("div");
+    let downloadButton = document.createElement("a");
 	const name = `${sid || "user"}-${filename}`;
 	filesStack[sid] = name;
-	message.id = name;
 	hiddenInput.id = `${name}+input`;
 	hiddenInput.value = filetype;
 	if (sid) {
@@ -390,6 +392,22 @@ const createFileMessage = (sid, filename, filesize, sentTime, senderName, filety
 		message.classList.add("sender");
 	}
 
+    previewButton.id = name;
+    previewButton.innerText = "Preview";
+    downloadButton.id = `${name}+download`;
+    downloadButton.innerText = "Download";
+    downloadButton.download = filename;
+    if (!sid) {
+        downloadButton.href = ownUrl;
+        previewButton.addEventListener("click", () => {
+            let filePreview = document.getElementById("filePreview");
+            if (!filePreview) {
+                filePreview = createPreview(filetype);
+            }
+            filePreview.src = ownUrl;
+            previewBackground.classList.remove("isHidden");
+        });
+    }
 	hiddenInput.hidden = true;
 	userNameDiv.innerText = senderName;
 	const hours = new Date(sentTime).getHours();
@@ -404,11 +422,12 @@ const createFileMessage = (sid, filename, filesize, sentTime, senderName, filety
 	time.classList.add("time");
 	content.classList.add("content");
 	filesizeDiv.classList.add("size");
+    buttonDiv.classList.add("file-options");
 
-
+    buttonDiv.append(previewButton, downloadButton);
 	info.append(userNameDiv, time);
 	content.append(filenameDiv, filesizeDiv);
-	message.append(info, content, hiddenInput);
+	message.append(info, content, hiddenInput, buttonDiv);
 	chatRoom.scrollTop = chatRoom.scrollHeight;
 	chatRoom.append(message);
 }
@@ -426,6 +445,8 @@ const createChannel = (peer, sid) => {
 			const blobUrl = URL.createObjectURL(event.data);
 			const ele = document.getElementById(filesStack[sid]);
 			const eleInput = document.getElementById(filesStack[sid] + "+input");
+            const downloadButton = document.getElementById(filesStack[sid] + "+download");
+            downloadButton.href = blobUrl;
 			ele.addEventListener("click", () => {
 				let filePreview = document.getElementById("filePreview");
 				if (!filePreview) {
@@ -438,7 +459,7 @@ const createChannel = (peer, sid) => {
 		} else {
 			const { senderName, filename, time, filesize, filetype } = JSON.parse(event.data);
 			console.log(filetype);
-			createFileMessage(sid, filename, filesize, time, senderName, filetype);
+			createFileMessage(sid, filename, filesize, time, senderName, filetype, null);
 		}
 	}
 	dataChannels[sid] = channel;
@@ -862,22 +883,28 @@ fileInput.addEventListener("change", (e) => {
 		for (let j = 0; j < files.length; j++) {
 			const file = files[j];
 			const sentTime = Date.now();
-			for (let i = 0; i < keys.length; i++) {
-				const fileReader = new FileReader();
-				fileReader.onload = () => {
-					console.log(file.type);
-					dataChannels[keys[i]].send(JSON.stringify({
-						senderName: username,
-						filename: file.name,
-						time: sentTime,
-						filesize: file.size,
-						filetype: file.type
-					}));
-					dataChannels[keys[i]].send(fileReader.result);
-				}
-				fileReader.readAsArrayBuffer(files[j]);
-			}
-			createFileMessage(null, file.name, file.size, sentTime, username, file.type);
+            if (keys.length === 0) {
+                const fileReader = new FileReader();
+                fileReader.onload = () => {
+                    createFileMessage(null, file.name, file.size, sentTime, username, file.type, URL.createObjectURL(new Blob([fileReader.result])));
+                }
+                fileReader.readAsArrayBuffer(file);
+            } else {
+                for (let i = 0; i < keys.length; i++) {
+                    const fileReader = new FileReader();
+                    fileReader.onload = () => {
+                        dataChannels[keys[i]].send(JSON.stringify({
+                            senderName: username,
+                            filename: file.name,
+                            time: sentTime,
+                            filesize: file.size,
+                            filetype: file.type
+                        }));
+                        dataChannels[keys[i]].send(fileReader.result);
+                    }
+                    fileReader.readAsArrayBuffer(file);
+                }
+            }
 		}	
 	}
 });
