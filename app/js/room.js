@@ -459,7 +459,6 @@ const createChannel = (peer, sid) => {
             delete filesStack[sid];
 		} else {
 			const { senderName, filename, time, filesize, filetype } = JSON.parse(event.data);
-			console.log(filetype);
 			createFileMessage(sid, filename, filesize, time, senderName, filetype, null);
 		}
 	}
@@ -890,7 +889,7 @@ fileInput.addEventListener("change", (e) => {
             console.log(dataChannels, keys);
             for (let i = 0; i < keys.length; i++) {
                 const fileReader = new FileReader();
-                fileReader.onloadend = () => {
+                fileReader.onload = () => {
                     dataChannels[keys[i]].send(JSON.stringify({
                         senderName: username,
                         filename: file.name,
@@ -898,6 +897,8 @@ fileInput.addEventListener("change", (e) => {
                         filesize: file.size,
                         filetype: file.type
                     }));
+                }
+                fileReader.onloadend = () => {
                     dataChannels[keys[i]].send(fileReader.result);
                 }
                 fileReader.readAsArrayBuffer(file);
