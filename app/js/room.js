@@ -429,6 +429,7 @@ const createFileMessage = (sid, filename, filesize, sentTime, senderName, filety
 	content.append(filenameDiv, filesizeDiv);
 	message.append(info, content, hiddenInput, buttonDiv);
 	chatRoom.scrollTop = chatRoom.scrollHeight;
+    console.log(message);
 	chatRoom.append(message);
 }
 
@@ -883,28 +884,25 @@ fileInput.addEventListener("change", (e) => {
 		for (let j = 0; j < files.length; j++) {
 			const file = files[j];
 			const sentTime = Date.now();
-            if (keys.length === 0) {
+            for (let i = 0; i < keys.length; i++) {
                 const fileReader = new FileReader();
                 fileReader.onload = () => {
-                    createFileMessage(null, file.name, file.size, sentTime, username, file.type, URL.createObjectURL(new Blob([fileReader.result])));
+                    dataChannels[keys[i]].send(JSON.stringify({
+                        senderName: username,
+                        filename: file.name,
+                        time: sentTime,
+                        filesize: file.size,
+                        filetype: file.type
+                    }));
+                    dataChannels[keys[i]].send(fileReader.result);
                 }
                 fileReader.readAsArrayBuffer(file);
-            } else {
-                for (let i = 0; i < keys.length; i++) {
-                    const fileReader = new FileReader();
-                    fileReader.onload = () => {
-                        dataChannels[keys[i]].send(JSON.stringify({
-                            senderName: username,
-                            filename: file.name,
-                            time: sentTime,
-                            filesize: file.size,
-                            filetype: file.type
-                        }));
-                        dataChannels[keys[i]].send(fileReader.result);
-                    }
-                    fileReader.readAsArrayBuffer(file);
-                }
             }
+            const fileReader = new FileReader();
+            fileReader.onload = () => {
+                createFileMessage(null, file.name, file.size, sentTime, username, file.type, URL.createObjectURL(new Blob([fileReader.result])));
+            }
+            fileReader.readAsArrayBuffer(file);
 		}	
 	}
 });
