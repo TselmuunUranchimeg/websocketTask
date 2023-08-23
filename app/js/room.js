@@ -441,6 +441,7 @@ const createChannel = (peer, sid) => {
 		console.log("Channel is opened");
 	}
 	channel.onmessage = (event) => {
+        console.log(event.data, typeof event.data);
 		if (typeof event.data === "object") {
 			const blobUrl = URL.createObjectURL(event.data);
 			const ele = document.getElementById(filesStack[sid]);
