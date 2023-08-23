@@ -463,6 +463,7 @@ const createChannel = (peer, sid) => {
 			createFileMessage(sid, filename, filesize, time, senderName, filetype, null);
 		}
 	}
+    console.log(sid);
 	dataChannels[sid] = channel;
 }
 
@@ -587,7 +588,7 @@ const createConnection = (connections, sid, isHandleVideoOffer) => {
                     });
                 })
                 .then(() => {
-					createChannel(connections[sid], true, sid);
+					createChannel(connections[sid], sid);
                     return connections[sid].createAnswer();
                 })
                 .then((answer) => {
