@@ -888,19 +888,17 @@ fileInput.addEventListener("change", (e) => {
 			const sentTime = Date.now();
             console.log(dataChannels, keys);
             for (let i = 0; i < keys.length; i++) {
+                dataChannels[keys[i]].send(JSON.stringify({
+                    senderName: username,
+                    filename: file.name,
+                    time: sentTime,
+                    filesize: file.size,
+                    filetype: file.type
+                }));
                 const fileReader = new FileReader();
-                fileReader.onload = () => {
-                    dataChannels[keys[i]].send(JSON.stringify({
-                        senderName: username,
-                        filename: file.name,
-                        time: sentTime,
-                        filesize: file.size,
-                        filetype: file.type
-                    }));
-                }
-                fileReader.onloadend = () => {
+                fileReader.addEventListener("loadend", () => {
                     dataChannels[keys[i]].send(fileReader.result);
-                }
+                });
                 fileReader.readAsArrayBuffer(file);
             }
             const fileReader = new FileReader();
