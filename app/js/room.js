@@ -432,6 +432,10 @@ const createFileMessage = (sid, filename, filesize, sentTime, senderName, filety
 	chatRoom.append(message);
 }
 
+let sizes = {};
+let slices = {};
+let receivedSize = {};
+
 const createChannel = (peer, sid) => {
 	const channel = peer.createDataChannel(roomid, {
 		negotiated: true,
@@ -445,9 +449,34 @@ const createChannel = (peer, sid) => {
         try {
             if (typeof event.data === "string") {
                 const { senderName, filename, time, filesize, filetype } = JSON.parse(event.data);
+                sizes[sid] = filesize;
+                slices[sid] = [];
+                receivedSize[sid] = 0;
 			    createFileMessage(sid, filename, filesize, time, senderName, filetype, null);
             } else {
-                console.log("Reaches here");
+                receivedSize[sid]+= event.data.byteLength;
+                slices[sid].push(event.data);
+                if (receivedSize[sid] === sizes[sid]) {
+                    const data = new Blob(slices[sid]);
+                    const blobUrl = URL.createObjectURL(data);
+                    const ele = document.getElementById(filesStack[sid]);
+                    const eleInput = document.getElementById(filesStack[sid] + "+input");
+                    const downloadButton = document.getElementById(filesStack[sid] + "+download");
+                    downloadButton.href = blobUrl;
+                    ele.addEventListener("click", () => {
+                        let filePreview = document.getElementById("filePreview");
+                        if (!filePreview) {
+                            filePreview = createPreview(eleInput.value);
+                        }
+                        filePreview.src = blobUrl;
+                        previewBackground.classList.remove("isHidden");
+                    });
+                    filesStack[sid] = null;
+                    receivedSize[sid] = 0;
+                    slices[sid] = [];
+                    sizes[sid] = 0;
+                }
+                /* console.log("Reaches here");
                 const data = new Blob([event.data]);
                 const blobUrl = URL.createObjectURL(data);
                 const ele = document.getElementById(filesStack[sid]);
@@ -462,7 +491,7 @@ const createChannel = (peer, sid) => {
                     filePreview.src = blobUrl;
                     previewBackground.classList.remove("isHidden");
                 });
-                filesStack[sid] = null;
+                filesStack[sid] = null; */
             }
         }
         catch (e) {
@@ -886,6 +915,22 @@ function handleStream(audioStream, sid) {
 
 }
 
+const sendSlice = (offset, file, channel) => {
+    const chunkSize = 16384;
+    const fileReader = new FileReader();
+    fileReader.addEventListener("load", e => {
+        channel.send(e.target.result);
+        offset+= e.target.result.byteLength;
+        if (offset < file.size) {
+            sendSlice(offset, file, channel);
+        }
+    });
+    fileReader.addEventListener("error", (err) => {
+        console.log(err);
+    });
+    fileReader.readAsArrayBuffer(file.slice(offset, offset + chunkSize));
+}
+
 fileInput.addEventListener("change", (e) => {
 	const files = e.target.files;
 	if (files && files.length > 0) {
@@ -902,15 +947,7 @@ fileInput.addEventListener("change", (e) => {
                     filesize: file.size,
                     filetype: file.type
                 }));
-                const fileReader = new FileReader();
-                fileReader.addEventListener("load", (e) => {
-                    console.log(e.target.result);
-                    dataChannels[keys[i]].send(e.target.result);
-                });
-                fileReader.addEventListener("error", (err) => {
-                    console.log(err);
-                });
-                fileReader.readAsArrayBuffer(file);
+                sendSlice(0, file, dataChannels[keys[i]]);
             }
             const fileReader = new FileReader();
             fileReader.onload = () => {
