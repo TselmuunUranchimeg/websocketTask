@@ -437,31 +437,37 @@ const createChannel = (peer, sid) => {
 		negotiated: true,
 		id: 5
 	});
+    channel.binaryType = "arraybuffer";
 	channel.onopen = () => {
 		console.log("Channel is opened");
 	}
 	channel.onmessage = (event) => {
-        console.log(event.data, typeof event.data);
-		if (typeof event.data === "string") {
-			const { senderName, filename, time, filesize, filetype } = JSON.parse(event.data);
-			createFileMessage(sid, filename, filesize, time, senderName, filetype, null);
-		} else {
-            console.log("Reaches the object section!");
-            const blobUrl = URL.createObjectURL(event.data);
-			const ele = document.getElementById(filesStack[sid]);
-			const eleInput = document.getElementById(filesStack[sid] + "+input");
-            const downloadButton = document.getElementById(filesStack[sid] + "+download");
-            downloadButton.href = blobUrl;
-			ele.addEventListener("click", () => {
-				let filePreview = document.getElementById("filePreview");
-				if (!filePreview) {
-					filePreview = createPreview(eleInput.value);
-				}
-				filePreview.src = blobUrl;
-				previewBackground.classList.remove("isHidden");
-			});
-            filesStack[sid] = null;
-		}
+        try {
+            if (typeof event.data === "string") {
+                const { senderName, filename, time, filesize, filetype } = JSON.parse(event.data);
+			    createFileMessage(sid, filename, filesize, time, senderName, filetype, null);
+            } else {
+                console.log("Reaches here");
+                const data = new Blob([event.data]);
+                const blobUrl = URL.createObjectURL(data);
+                const ele = document.getElementById(filesStack[sid]);
+                const eleInput = document.getElementById(filesStack[sid] + "+input");
+                const downloadButton = document.getElementById(filesStack[sid] + "+download");
+                downloadButton.href = blobUrl;
+                ele.addEventListener("click", () => {
+                    let filePreview = document.getElementById("filePreview");
+                    if (!filePreview) {
+                        filePreview = createPreview(eleInput.value);
+                    }
+                    filePreview.src = blobUrl;
+                    previewBackground.classList.remove("isHidden");
+                });
+                filesStack[sid] = null;
+            }
+        }
+        catch (e) {
+            console.log(e);
+        }
 	}
     console.log(sid);
 	dataChannels[sid] = channel;
@@ -899,7 +905,7 @@ fileInput.addEventListener("change", (e) => {
                 const fileReader = new FileReader();
                 fileReader.addEventListener("load", (e) => {
                     console.log(e.target.result);
-                    dataChannels[keys[i]].send(fileReader.result);
+                    dataChannels[keys[i]].send(e.target.result);
                 });
                 fileReader.addEventListener("error", (err) => {
                     console.log(err);
