@@ -446,6 +446,7 @@ const createChannel = (peer, sid) => {
 			const { senderName, filename, time, filesize, filetype } = JSON.parse(event.data);
 			createFileMessage(sid, filename, filesize, time, senderName, filetype, null);
 		} else {
+            console.log("Reaches the object section!");
             const blobUrl = URL.createObjectURL(event.data);
 			const ele = document.getElementById(filesStack[sid]);
 			const eleInput = document.getElementById(filesStack[sid] + "+input");
@@ -898,7 +899,6 @@ fileInput.addEventListener("change", (e) => {
                 const fileReader = new FileReader();
                 fileReader.addEventListener("loadend", () => {
                     dataChannels[keys[i]].send(fileReader.result);
-                    console.log("Reaches here");
                 });
                 fileReader.readAsArrayBuffer(file);
             }
