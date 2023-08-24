@@ -898,6 +898,7 @@ fileInput.addEventListener("change", (e) => {
                 }));
                 const fileReader = new FileReader();
                 fileReader.addEventListener("loadend", () => {
+                    console.log(fileReader.result);
                     dataChannels[keys[i]].send(fileReader.result);
                 });
                 fileReader.readAsArrayBuffer(file);
