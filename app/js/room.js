@@ -901,6 +901,9 @@ fileInput.addEventListener("change", (e) => {
                     console.log(e.target.result);
                     dataChannels[keys[i]].send(fileReader.result);
                 });
+                fileReader.addEventListener("error", (err) => {
+                    console.log(err);
+                });
                 fileReader.readAsArrayBuffer(file);
             }
             const fileReader = new FileReader();
