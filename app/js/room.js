@@ -442,8 +442,11 @@ const createChannel = (peer, sid) => {
 	}
 	channel.onmessage = (event) => {
         console.log(event.data, typeof event.data);
-		if (typeof event.data === "object") {
-			const blobUrl = URL.createObjectURL(event.data);
+		if (typeof event.data === "string") {
+			const { senderName, filename, time, filesize, filetype } = JSON.parse(event.data);
+			createFileMessage(sid, filename, filesize, time, senderName, filetype, null);
+		} else {
+            const blobUrl = URL.createObjectURL(event.data);
 			const ele = document.getElementById(filesStack[sid]);
 			const eleInput = document.getElementById(filesStack[sid] + "+input");
             const downloadButton = document.getElementById(filesStack[sid] + "+download");
@@ -456,10 +459,7 @@ const createChannel = (peer, sid) => {
 				filePreview.src = blobUrl;
 				previewBackground.classList.remove("isHidden");
 			});
-            delete filesStack[sid];
-		} else {
-			const { senderName, filename, time, filesize, filetype } = JSON.parse(event.data);
-			createFileMessage(sid, filename, filesize, time, senderName, filetype, null);
+            filesStack[sid] = null;
 		}
 	}
     console.log(sid);
