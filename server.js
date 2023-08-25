@@ -12,6 +12,10 @@ const io = socketio(server);
 
 app.use(express.static("app"));
 
+app.get("/", (_, res) => {
+	res.end("This is the / route");
+});
+
 let rooms = {};
 let socketroom = {};
 let socketname = {};
